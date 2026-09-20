@@ -78,6 +78,12 @@ Today the LM Studio server is driven from a terminal (`lms server start --port -
 - Rollback boundary: `git revert` of the four authored commits restores the untouched `wails3 init` scaffold at `ebb3c8f`. Nothing outside this repository was changed.
 - Known environmental noise: macOS linker prints `object file ... built for newer 'macOS' version (13.0) than being linked (12.0)` during `wails3 build`; benign, present on the untouched scaffold too.
 
+- Native review (RDD is **on**, decided by global): `gentle-ai review assess` over `ebb3c8f..HEAD` returned **risk high**, `review_due=true`, reason `high_risk`, on two signals — process spawning in `build/ios/scripts/deps/install_deps.go` and shell scripting in `.github/workflows/ci.yml`. Consent was relayed to the user, who chose **granted**.
+  - Outcome: **unavailable — terminal stop**. Three lenses (`review-risk`, `review-resilience`, `review-readability`) were admitted. `review-reliability` failed twice: first the model provider rejected the request (API safeguard error), then the reviewer payload came back as truncated, incomplete JSON. The refuter then ran and the transaction reached `correction_required`, but the next bound status returned `stop` with `corrupted_or_unverifiable_authority`, which the contract defines as terminal.
+  - No correction ledger was ever readable, so no finding was applied or dismissed. No review receipt exists for this candidate, and none is claimed.
+  - The failures began at the model provider, not in a Gentle AI contract, so no provider-defect report was filed.
+  - Delivery therefore follows ordinary repository policy. The independent evidence for this work unit is the clean-clone reproduction of every CI step recorded above, not a review receipt.
+
 ### T1 remainder
 - `gh repo create cags84/gui-go-lmstudio --public --source . --push` — name confirmed free on GitHub (`gh repo view` returns "Could not resolve"). Not yet run.
 
