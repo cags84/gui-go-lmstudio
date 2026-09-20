@@ -31,7 +31,7 @@ Today the LM Studio server is driven from a terminal (`lms server start --port -
 | ID | Task | Route | Status |
 |---|---|---|---|
 | T1 | Bootstrap: `wails3 init` (react), module path, MIT, README, .gitignore, CI (vet + test + gofmt on 3 OSes), git init, commits, `gh repo create --public --push` | inline (generator) + delegated writer for README/CI/CONTRIBUTING | [x] |
-| T2 | `internal/lms`: Runner interface + exec impl, Client `ServerStatus`/`PS`/`LS` with JSON fixtures, FakeRunner; integration test skipped with `-short` | delegated writer | [ ] |
+| T2 | `internal/lms`: Runner interface + exec impl, Client `ServerStatus`/`ListModels`/`LoadedModels` with JSON fixtures, FakeRunner; integration test skipped with `-short` | delegated writer | [x] |
 | T3 | Server lifecycle: `ServerStart{Port,Bind,CORS}`, `ServerStop`, Wails service, React status card + controls, Local/Network warning | delegated writer | [ ] |
 | T4 | Models: on-disk table (filters), loaded list + unload, load dialog (gpu, context, ttl, identifier) | delegated writer | [ ] |
 | T5 | Live logs: `lms log stream --json --stats` supervisor, ring buffer, `logs:entry` events, React log view with filters | delegated writer | [ ] |
@@ -93,7 +93,22 @@ Today the LM Studio server is driven from a terminal (`lms server start --port -
   - Fix commit `452382f`. **Re-run 35519034211: ubuntu-latest, macos-latest and windows-latest all green.**
 - Lesson recorded: a green local macOS check is not evidence about the other two runners. Cross-platform claims need the matrix run.
 
-### T2..T7
+### T2 — `internal/lms` boundary
+- Status: **done** (2026-09-20). Route: delegated writer (writer trigger: 9 new non-trivial files).
+- Delivered: `runner.go` (Runner interface, `ExecRunner`, `RunError` carrying exit code and captured output, `ErrNotInstalled` sentinel, binary resolution PATH → `~/.lmstudio/bin/lms[.exe]`), `types.go` (domain types, `Model.IsRemote`), `wire.go` (JSON mirrors, epoch ms → `time.Time`/`time.Duration`), `client.go` (`ServerStatus`, `ListModels` with a typed filter enum, `LoadedModels`), plus `FakeRunner` and the six real fixtures.
+- TDD: **strict, honored.** The writer reported an observed compile-failure RED for each of the three production groups before implementing. The integration test was added last against already-implemented code, so no RED applies to it; that was reported plainly rather than dressed up.
+- Verification, re-run independently by the parent, not taken on the writer's word:
+  - `go vet ./...` → PASS, no output
+  - `go test ./internal/lms/ -v -count=1` → **39 cases PASS, 0 FAIL**
+  - `go test ./... -short` → PASS; `TestServerStatus_Integration` SKIP confirmed under `-short` and PASS without it
+  - `gofmt -l .` → empty
+- Size: 1157 authored lines (405 production, 752 test), over the ~400-line advisory heuristic. Accepted: the required behavior list is genuinely large and trimming tests to hit a number is explicitly forbidden.
+- Rollback boundary: `rm -rf internal/` removes this unit entirely; no other file, `go.mod` or `go.sum` was touched.
+
+### Carried into T5 (found by experiment, not yet implemented)
+- `Runner.Stream` relies on `exec.CommandContext`, which kills the child with SIGKILL on cancel. `lms log stream` loses its buffered tail under SIGKILL but flushes cleanly under SIGINT. T5 must set `cmd.Cancel` to send `os.Interrupt` with a `WaitDelay` fallback, and handle Windows separately, where `os.Interrupt` is unsupported.
+
+### T3..T7
 - Not started.
 
 ## Forecast
@@ -106,7 +121,7 @@ Create the public GitHub repository and push, then start T2 (`internal/lms` boun
 
 ## Discoveries (affect the design; recorded 2026-09-20)
 
-- **Remote models exist.** `lms ls --json` returns a non-null `deviceIdentifier` for models served by a remote LM Link device, and then prefixes `path`/`indexedModelIdentifier` with `<deviceHash>:`. 7 of 11 entries on this machine were remote. The model table must group or badge local vs remote or it will look like duplicates.
+- **Remote models exist, and the only safe signal is `deviceIdentifier`.** A non-null `deviceIdentifier` means the model is served by a remote LM Link device; 7 of 11 entries on this machine are remote, so this is the common case. **Do not sniff the `<deviceHash>:` prefix.** It is inconsistent across commands: in `ls` a remote entry prefixes both `path` and `indexedModelIdentifier`, but in `ps` the same remote model has an unprefixed `path` and a prefixed `indexedModelIdentifier`. Prefix-sniffing silently misclassifies loaded remote models as local. The model table must badge local vs remote or it will look like duplicates.
 - **Optional fields.** `paramsString`, `variants`, `selectedVariant`, `vision`, `trainedForToolUse` are absent on embedding entries; `deviceIdentifier` and `ttlMs` are nullable. Go structs need pointers / `omitempty`, not zero values.
 - **`lms ps --json`** adds `identifier`, `ttlMs`, `lastUsedTime`, `contextLength`, `status`, `queued`, `parallel` on top of the `ls` fields, and it wakes the daemon as a side effect — an empty array is not proof that nothing is loaded.
 - **REST is an enrichment, not a replacement.** While running, the server answers `GET /api/v1/models` (snake_case, includes `loaded_instances` and a `capabilities` block richer than the CLI) and the older `GET /api/v0/models` (`state`, `loaded_context_length`). Neither is reachable while the server is stopped, so lifecycle stays on `lms server status --json`. The two vocabularies disagree (`v1: "llm"` vs `v0: "vlm"` for the same vision model) and must not be mixed.
@@ -115,3 +130,26 @@ Create the public GitHub repository and push, then start T2 (`internal/lms` boun
 ## Fixtures captured
 
 Real CLI output saved for `internal/lms/testdata/` in T2: `server_status_stopped.json`, `server_status_running.json`, `ps_empty.json`, `ps_one_llm.json`, `ls_all.json` (11 models, both types, local + remote), `ls_embedding.json`.
+
+## Server exposure: how the UI can tell the truth (settled 2026-09-20)
+
+`lms server status --json` returns only `{"running","port"}`. **There is no way to read the bind address back from the CLI**, and remembering what the app passed to `--bind` is wrong, because LM Studio's own GUI or a terminal can start the server independently.
+
+Working detection, pure stdlib and cross-platform: dial the machine's own LAN address on the server port. Verified against a localhost-only server on port 1235:
+
+| Target | `net.DialTimeout` result |
+|---|---|
+| `127.0.0.1:1235` | connects |
+| `192.168.3.100:1235` (this host's LAN IP) | refused |
+
+A server bound to `0.0.0.0` accepts both. T3 uses this probe for the exposure badge instead of trusting remembered settings.
+
+Related: `lms server start` against an already-running server exits 0 and reprints its success line, so a Start button is safe to press twice.
+
+## Log stream: verified behavior for T5
+
+- Use `-s server`. The **default source is `model`**, which emitted nothing even for a real chat completion, because model input/output logging depends on LM Studio's own prompt-logging setting.
+- The stream prints a plain-text banner (`Streaming logs from LM Studio`) and a blank line **before** any JSON. The NDJSON reader must skip non-JSON lines rather than error on them.
+- Line schema: `{"timestamp":<epoch ms>,"data":{"type":"server.log","content":"<text>","level":"debug"|"info"}}`.
+- It is genuinely **live** when piped, not block-buffered: a request fired at 10:27:31.731 produced its first log line at 10:27:31.750, about 19 ms later. A `bufio.Scanner` over the stdout pipe is enough; no PTY is needed.
+- Fixture captured: `log_stream_server.ndjson` (7 JSON lines plus the banner), held in the session scratchpad until T5 needs it.
