@@ -1,0 +1,10 @@
+# Normalise line endings in the repository.
+* text=auto
+
+# Go sources stay LF on every checkout, including Windows. Without this, a
+# Windows runner checks them out with CRLF and `gofmt -l` reports every file
+# as unformatted, failing CI for a reason that has nothing to do with the code.
+*.go text eol=lf
+
+# Windows batch files genuinely need CRLF.
+*.bat text eol=crlf

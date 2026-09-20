@@ -67,7 +67,13 @@ wails3 package
 
 ### Platform notes
 
-- **Linux**: requires `libwebkit2gtk-4.1-dev` to build, and the matching runtime library (`libwebkit2gtk-4.1-0` or your distribution's equivalent) to run.
+- **Linux**: Wails v3 builds on GTK4 and WebKitGTK 6.0, which need Ubuntu 24.04+ or Debian 13+:
+
+  ```sh
+  sudo apt install build-essential pkg-config libgtk-4-dev libwebkitgtk-6.0-dev
+  ```
+
+  On older distributions, install `libgtk-3-dev libwebkit2gtk-4.1-dev` instead and build the legacy path with `wails3 build -tags gtk3`.
 - **macOS** and **Windows**: use the system-provided webview; no extra runtime dependency.
 
 ## Security
