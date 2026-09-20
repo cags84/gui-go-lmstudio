@@ -104,6 +104,12 @@ Today the LM Studio server is driven from a terminal (`lms server start --port -
   - `gofmt -l .` → empty
 - Size: 1157 authored lines (405 production, 752 test), over the ~400-line advisory heuristic. Accepted: the required behavior list is genuinely large and trimming tests to hit a number is explicitly forbidden.
 - Rollback boundary: `rm -rf internal/` removes this unit entirely; no other file, `go.mod` or `go.sum` was touched.
+- CI on the pushed commit (run 35520871619): ubuntu-latest, macos-latest and windows-latest all green.
+- Native review: `assess` returned **risk high**, `review_due=true`, reason `high_risk`, on one signal — process spawning in `internal/lms/runner.go`. Consent relayed; the user chose **granted**.
+  - All four lenses were admitted, after the model provider rejected two of them several times and they succeeded on retry. The refuter corroborated findings and the transaction reached `correction_required`.
+  - Outcome: **unavailable — blocked by a tool defect, then declined for this candidate.** The `correction_plan_required` transition published five argument tokens, but `review capture-correction-plan` refuses that exact list, requiring a sixth, `--correction-lines`, that the transition never emits. The contract forbids rebuilding provider-issued tokens, and no read-only command exposes the corroborated findings, so no line forecast could be made either.
+  - With the user's consent, this was reported as an occurrence on the existing open upstream issue #4388, which describes the identical defect on an earlier build; no new issue was created and no labels were touched. The candidate-scoped decline was then executed once and validated (`action: declined`, `consent: declined_this_candidate`, matching target identity).
+  - **No review receipt exists for this candidate and none is claimed.** The evidence of record is the independent verification above plus the green three-platform CI run.
 
 ### Carried into T5 (found by experiment, not yet implemented)
 - `Runner.Stream` relies on `exec.CommandContext`, which kills the child with SIGKILL on cancel. `lms log stream` loses its buffered tail under SIGKILL but flushes cleanly under SIGINT. T5 must set `cmd.Cancel` to send `os.Interrupt` with a `WaitDelay` fallback, and handle Windows separately, where `os.Interrupt` is unsupported.
