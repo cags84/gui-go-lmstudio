@@ -84,8 +84,14 @@ Today the LM Studio server is driven from a terminal (`lms server start --port -
   - The failures began at the model provider, not in a Gentle AI contract, so no provider-defect report was filed.
   - Delivery therefore follows ordinary repository policy. The independent evidence for this work unit is the clean-clone reproduction of every CI step recorded above, not a review receipt.
 
-### T1 remainder
-- `gh repo create cags84/gui-go-lmstudio --public --source . --push` — name confirmed free on GitHub (`gh repo view` returns "Could not resolve"). Not yet run.
+### T1 remainder — done
+- Published: https://github.com/cags84/gui-go-lmstudio (public, MIT), `main` tracking `origin/main`.
+- Before publishing, tracked files were scanned for secrets, the maintainer's email and absolute home paths. One hit, an absolute project path in this document, was replaced with a repository-relative reference.
+- **The first CI run failed on two of three runners**, which local checks could not have caught:
+  - *Ubuntu*: the workflow installed `libwebkit2gtk-4.1-dev`, but Wails v3 builds on GTK4 + WebKitGTK 6.0 by default, so `pkg-config` could not resolve `gtk4` / `webkitgtk-6.0` and `go vet` failed. Fixed to `build-essential pkg-config libgtk-4-dev libwebkitgtk-6.0-dev`. The README carried the same wrong instruction and now documents the default GTK4 stack plus the legacy `-tags gtk3` path.
+  - *Windows*: Go sources were checked out with CRLF, so `gofmt -l .` flagged every file in the repo, `main.go` included. Fixed with a `.gitattributes` pinning `*.go` to `eol=lf`.
+  - Fix commit `452382f`. **Re-run 35519034211: ubuntu-latest, macos-latest and windows-latest all green.**
+- Lesson recorded: a green local macOS check is not evidence about the other two runners. Cross-platform claims need the matrix run.
 
 ### T2..T7
 - Not started.
