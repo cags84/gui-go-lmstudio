@@ -1,0 +1,15 @@
+{
+	"fixed": {
+		"file_version": "0.1.0"
+	},
+	"info": {
+		"0000": {
+			"ProductVersion": "0.1.0",
+			"CompanyName": "cags84",
+			"FileDescription": "Cross-platform desktop controller for the LM Studio local server",
+			"LegalCopyright": "© 2026, My Company",
+			"ProductName": "LM Studio Controller",
+			"Comments": "This is a comment"
+		}
+	}
+}

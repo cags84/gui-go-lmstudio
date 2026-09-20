@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MsixPackagingToolTemplate
+    xmlns="http://schemas.microsoft.com/msix/packaging/msixpackagingtool/template/2022">
+    <Settings
+        AllowTelemetry="false"
+        ApplyACLsToPackageFiles="true"
+        GenerateCommandLineFile="true"
+        AllowPromptForPassword="false">
+    </Settings>
+    <Installer
+        Path="lm_studio_controller"
+        Arguments=""
+        InstallLocation="C:\Program Files\cags84\LM Studio Controller">
+    </Installer>
+    <PackageInformation
+        PackageName="LM Studio Controller"
+        PackageDisplayName="LM Studio Controller"
+        PublisherName="CN=cags84"
+        PublisherDisplayName="cags84"
+        Version="0.1.0.0"
+        PackageDescription="Cross-platform desktop controller for the LM Studio local server">
+        <Capabilities>
+            <Capability Name="runFullTrust" />
+            
+        </Capabilities>
+        <Applications>
+            <Application
+                Id="com.cags84.lmstudiocontroller"
+                Description="Cross-platform desktop controller for the LM Studio local server"
+                DisplayName="LM Studio Controller"
+                ExecutableName="lm_studio_controller"
+                EntryPoint="Windows.FullTrustApplication">
+                
+            </Application>
+        </Applications>
+        <Resources>
+            <Resource Language="en-us" />
+        </Resources>
+        <Dependencies>
+            <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.19041.0" />
+        </Dependencies>
+        <Properties>
+            <Framework>false</Framework>
+            <DisplayName>LM Studio Controller</DisplayName>
+            <PublisherDisplayName>cags84</PublisherDisplayName>
+            <Description>Cross-platform desktop controller for the LM Studio local server</Description>
+            <Logo>Assets\AppIcon.png</Logo>
+        </Properties>
+    </PackageInformation>
+    <SaveLocation PackagePath="lm_studio_controller.msix" />
+    <PackageIntegrity>
+        <CertificatePath></CertificatePath>
+    </PackageIntegrity>
+</MsixPackagingToolTemplate>

@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Name=LM Studio Controller
+Comment=Cross-platform desktop controller for the LM Studio local server
+# The Exec line includes %u to pass the URL to the application
+Exec=/usr/local/bin/lm_studio_controller %u
+Terminal=false
+Type=Application
+Icon=lm_studio_controller
+Categories=Utility;
+StartupWMClass=lm_studio_controller
+
+ 
