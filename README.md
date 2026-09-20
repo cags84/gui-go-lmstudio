@@ -1,59 +1,79 @@
-# Welcome to Your New Wails3 Project!
+# LM Studio Controller
 
-Congratulations on generating your Wails3 application! This README will guide you through the next steps to get your project up and running.
+![CI](https://github.com/cags84/gui-go-lmstudio/actions/workflows/ci.yml/badge.svg)
 
-## Getting Started
+A cross-platform desktop GUI for the [LM Studio](https://lmstudio.ai/) local server. It drives the bundled `lms` CLI so you can start or stop the server, choose localhost-only or LAN access, toggle CORS, and manage models — without a terminal.
 
-1. Navigate to your project directory in the terminal.
+**Status: early development.** Only the Wails application scaffold exists today. No LM Studio integration has been built yet.
 
-2. To run your application in development mode, use the following command:
+## Why this exists
 
-   ```
-   wails3 dev
-   ```
+LM Studio already ships `lms`, a capable CLI for controlling its local server and models. This project wraps that CLI in a desktop GUI so you get live visibility (status, loaded models, streaming logs) alongside the actions, instead of juggling separate terminal commands.
 
-   This will start your application and enable hot-reloading for both frontend and backend changes.
+## Roadmap
 
-3. To build your application for production, use:
+- [ ] Server control: start/stop, port selection, localhost vs. LAN binding, CORS toggle
+- [ ] Model management: list, load, and unload models
+- [ ] Live log stream from `lms log stream`
+- [ ] System panel and tray icon
+- [ ] Packaged releases for macOS, Windows, and Linux
 
-   ```
-   wails3 build
-   ```
+**Later:**
 
-   This will create a production-ready executable in the `build` directory.
+- [ ] Model download with progress
+- [ ] Native REST API polling (in addition to the CLI)
+- [ ] LM Link support
+- [ ] Chat interface
 
-## Exploring Wails3 Features
+## Requirements
 
-Now that you have your project set up, it's time to explore the features that Wails3 offers:
+| Dependency | Version |
+|---|---|
+| LM Studio (with `lms` on `PATH`) | 0.4.x |
+| Go | 1.25+ |
+| Node.js (development only) | 20+ |
 
-1. **Check out the examples**: The best way to learn is by example. Visit the `examples` directory in the `v3/examples` directory to see various sample applications.
+## Development
 
-2. **Run an example**: To run any of the examples, navigate to the example's directory and use:
+Install the Wails v3 CLI:
 
-   ```
-   go run .
-   ```
+```sh
+go install github.com/wailsapp/wails/v3/cmd/wails3@latest
+```
 
-   Note: Some examples may be under development during the alpha phase.
+Install frontend dependencies:
 
-3. **Explore the documentation**: Visit the [Wails3 documentation](https://v3.wails.io/) for in-depth guides and API references.
+```sh
+npm --prefix frontend install
+```
 
-4. **Join the community**: Have questions or want to share your progress? Join the [Wails Discord](https://discord.gg/JDdSxwjhGf) or visit the [Wails discussions on GitHub](https://github.com/wailsapp/wails/discussions).
+Run in development mode (hot reload for both frontend and backend):
 
-## Project Structure
+```sh
+wails3 dev
+```
 
-Take a moment to familiarize yourself with your project structure:
+Build a production binary:
 
-- `frontend/`: Contains your frontend code (HTML, CSS, JavaScript/TypeScript)
-- `main.go`: The entry point of your Go backend
-- `app.go`: Define your application structure and methods here
-- `wails.json`: Configuration file for your Wails project
+```sh
+wails3 build
+```
 
-## Next Steps
+Package a distributable installer/bundle:
 
-1. Modify the frontend in the `frontend/` directory to create your desired UI.
-2. Add backend functionality in `main.go`.
-3. Use `wails3 dev` to see your changes in real-time.
-4. When ready, build your application with `wails3 build`.
+```sh
+wails3 package
+```
 
-Happy coding with Wails3! If you encounter any issues or have questions, don't hesitate to consult the documentation or reach out to the Wails community.
+### Platform notes
+
+- **Linux**: requires `libwebkit2gtk-4.1-dev` to build, and the matching runtime library (`libwebkit2gtk-4.1-0` or your distribution's equivalent) to run.
+- **macOS** and **Windows**: use the system-provided webview; no extra runtime dependency.
+
+## Security
+
+Binding the LM Studio server to `0.0.0.0` exposes the model server to every device on your local network, with no authentication in front of it. The app will warn before enabling LAN binding.
+
+## License
+
+[MIT](LICENSE)
