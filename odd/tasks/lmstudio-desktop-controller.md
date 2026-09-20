@@ -14,7 +14,7 @@ Today the LM Studio server is driven from a terminal (`lms server start --port -
 
 ## Scope (authorized)
 
-- New project under `/Users/carlos/Code/Claude/Projects/gui-go-lmstudio` (module `github.com/cags84/gui-go-lmstudio`).
+- This repository (Go module `github.com/cags84/gui-go-lmstudio`).
 - Everything listed in the milestones below. Out of scope (roadmap only): model download UI, REST polling, LM Link, chat.
 
 ## Constraints
